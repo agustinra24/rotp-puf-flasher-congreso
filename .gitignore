@@ -1,0 +1,43 @@
+# ESP-IDF build artifacts
+build/
+build-*/
+**/build-*/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+.cache/
+
+# OS
+.DS_Store
+._*
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Secrets and credentials
+.env
+*.pem
+*.key
+.secrets
+*.pufenc
+*.dump
+*.raw
+
+# Runtime logs
+logs/
+*.log
+
+# Editor temporaries
+*.tmp
+*.swp
+*~

@@ -1,0 +1,266 @@
+% ============================================================
+% ROTP-PUF-FLASHER: Congress Paper Bibliography
+% All entries verified against real publications 2026-06-02.
+% ============================================================
+
+% --- PUF Foundations ---
+
+@article{gao2020puf,
+  author    = {Gao, Yansong and Al-Sarawi, Said F. and Abbott, Derek},
+  title     = {Physical unclonable functions},
+  journal   = {Nat. Electron.},
+  volume    = {3},
+  number    = {2},
+  pages     = {81--91},
+  year      = {2020},
+}
+
+@article{holcomb2009powerup,
+  author    = {Holcomb, Daniel E. and Burleson, Wayne P. and Fu, Kevin},
+  title     = {Power-Up {SRAM} State as an Identifying Fingerprint
+               and Source of True Random Numbers},
+  journal   = {IEEE Trans. Comput.},
+  volume    = {58},
+  number    = {9},
+  pages     = {1198--1210},
+  year      = {2009},
+}
+
+@article{dodis2008fuzzy,
+  author    = {Dodis, Yevgeniy and Ostrovsky, Rafail and Reyzin, Leonid and Smith, Adam},
+  title     = {Fuzzy Extractors: How to Generate Strong Keys from
+               Biometrics and Other Noisy Data},
+  journal   = {SIAM J. Comput.},
+  volume    = {38},
+  number    = {1},
+  pages     = {97--139},
+  year      = {2008},
+}
+
+@article{baturone2015improved,
+  author    = {Baturone, Iluminada and Prada-Delgado, Miguel A. and
+               Eiroa, Susana},
+  title     = {Improved Generation of Identifiers, Secret Keys, and
+               Random Numbers from {SRAM}s},
+  journal   = {IEEE Trans. Inf. Forensics Security},
+  volume    = {10},
+  number    = {12},
+  pages     = {2653--2668},
+  year      = {2015},
+}
+
+@article{saraza2021improving,
+  author    = {Saraz{\'{a}}-Canflanca, P. and
+               Carrasco-L{\'{o}}pez, H. and
+               Santana-Andreo, A. and Brox, Piedad and
+               Castro-L{\'{o}}pez, Rafael and Roca, Elisenda
+               and Fern{\'{a}}ndez, Francisco V.},
+  title     = {Improving the Reliability of {SRAM}-Based {PUF}s under
+               Varying Operation Conditions and Aging Degradation},
+  journal   = {Microelectron. Reliab.},
+  volume    = {118},
+  pages     = {114049},
+  year      = {2021},
+}
+
+@article{wilde2018spatial,
+  author    = {Wilde, Florian and Gammel, Berndt M. and Pehl, Michael},
+  title     = {Spatial Correlation Analysis on Physical Unclonable Functions},
+  journal   = {IEEE Trans. Inf. Forensics Security},
+  volume    = {13},
+  number    = {6},
+  pages     = {1468--1480},
+  year      = {2018},
+}
+
+@article{zeitouni2016remanence,
+  author    = {Zeitouni, Shaza and Oren, Yossef and Wachsmann, Christian
+               and Koeberl, Patrick and Sadeghi, Ahmad-Reza},
+  title     = {Remanence Decay Side-Channel: The {PUF} Case},
+  journal   = {IEEE Trans. Inf. Forensics Security},
+  volume    = {11},
+  number    = {6},
+  pages     = {1106--1116},
+  year      = {2016},
+}
+
+% --- Secure Firmware Update ---
+
+@techreport{rfc9124_suit,
+  author    = {Moran, Brendan and Tschofenig, Hannes and Birkholz, Henk},
+  title     = {A Manifest Information Model for Firmware Updates in
+               Internet of Things ({IoT}) Devices},
+  type      = {RFC},
+  number    = {9124},
+  institution = {IETF},
+  year      = {2022}
+}
+
+@article{kuang2022survey,
+  author    = {Kuang, Boyu and Fu, Anmin and Susilo, Willy and
+               Yu, Shui and Gao, Yansong},
+  title     = {A Survey of Remote Attestation in Internet of Things:
+               Attacks, Countermeasures, and Prospects},
+  journal   = {Comput. Secur.},
+  volume    = {112},
+  pages     = {102498},
+  year      = {2022},
+}
+
+% --- Cryptographic Standards ---
+
+@techreport{krawczyk2010hkdf,
+  author    = {Krawczyk, Hugo and Eronen, Pasi},
+  title     = {{HMAC}-Based Extract-and-Expand Key Derivation Function ({HKDF})},
+  type      = {RFC},
+  number    = {5869},
+  institution = {IETF},
+  year      = {2010}
+}
+
+@techreport{krawczyk1997hmac,
+  author    = {Krawczyk, Hugo and Bellare, Mihir and Canetti, Ran},
+  title     = {{HMAC}: Keyed-Hashing for Message Authentication},
+  type      = {RFC},
+  number    = {2104},
+  institution = {IETF},
+  year      = {1997}
+}
+
+@techreport{nist2023fips197,
+  author    = {{National Institute of Standards and Technology}},
+  title     = {Advanced Encryption Standard ({AES})},
+  type      = {FIPS},
+  number    = {197},
+  institution = {NIST},
+  year      = {2023}
+}
+
+% --- ESP32 / Espressif ---
+
+@misc{espressif_esp_encrypted_img,
+  author    = {{Espressif Systems}},
+  title     = {esp\_encrypted\_img: Encrypted Image Component for {ESP-IDF}},
+  year      = {2026},
+  howpublished = {\url{https://components.espressif.com/components/espressif/esp_encrypted_img}}
+}
+
+@misc{stanicek2022esp32puflib,
+  author    = {Stan{\'{i}}{\v{c}}ek, O.},
+  title     = {esp32\_puflib: Open {SRAM-PUF} Library for {ESP32}},
+  year      = {2022},
+  howpublished = {GitHub repository, \url{https://github.com/staniond/esp32_puflib}}
+}
+
+% --- IoT Security Frameworks ---
+
+@misc{owasp2018iot,
+  author    = {{OWASP Foundation}},
+  title     = {{OWASP IoT} Top 10},
+  year      = {2018},
+  howpublished = {\url{https://owasp.org/www-project-internet-of-things/}}
+}
+
+@techreport{nist8259a,
+  author    = {{National Institute of Standards and Technology}},
+  title     = {{IoT} Device Cybersecurity Capability Core Baseline},
+  type      = {NISTIR},
+  number    = {8259A},
+  institution = {NIST},
+  year      = {2020},
+}
+
+@book{shostack2014threat,
+  author    = {Shostack, Adam},
+  title     = {Threat Modeling: Designing for Security},
+  publisher = {Wiley},
+  year      = {2014}
+}
+
+% --- Prior Group Work ---
+
+@techreport{salinas2026ejecucion,
+  author    = {Salinas Victorino, Alejandro and Campos S{\'{a}}nchez,
+               Raziel C. and Zapata Lara, J. de J.},
+  title     = {Encrypted-Firmware Runtime Execution with {HMAC} Verification
+               on {ESP32/MicroPython}},
+  institution = {INAOE},
+  year      = {2026}
+}
+
+% === SOTA COMPARISON (verified 2026-06-13) ===
+
+@article{falas2021modular,
+  author    = {Falas, Solon and Konstantinou, Charalambos and
+               Michael, Maria K.},
+  title     = {A Modular End-to-End Framework for Secure Firmware
+               Updates on Embedded Systems},
+  journal   = {ACM J. Emerg. Technol. Comput. Syst.},
+  volume    = {18},
+  number    = {1},
+  pages     = {3:1--3:19},
+  year      = {2022},
+}
+
+@inproceedings{joshi2023secure,
+  author    = {Joshi, Himanshu and Anand, A.S. and Kokila, J.},
+  title     = {Secure Firmware Update Architecture for {IoT} Devices
+               using Blockchain and {PUF}},
+  booktitle = {Proc. IEEE iQ-CCHESS},
+  year      = {2023},
+}
+
+@article{kietzmann2023puf,
+  author    = {Kietzmann, Peter and Schmidt, Thomas C. and
+               W{\"{a}}hlisch, Matthias},
+  title     = {{PUF} for the Commons: Enhancing Embedded Security
+               on the {OS} Level},
+  journal   = {IEEE Trans. Dependable Secure Comput.},
+  volume    = {21},
+  number    = {4},
+  pages     = {2194--2210},
+  year      = {2024},
+}
+
+@inproceedings{prada2017trustworthy,
+  author    = {Prada-Delgado, Miguel A. and V{\'{a}}zquez-Reyes, A. and
+               Baturone, Iluminada},
+  title     = {Trustworthy Firmware Update for {Internet-of-Thing}
+               Devices Using Physical Unclonable Functions},
+  booktitle = {Proc. IEEE Global Internet of Things Summit (GIoTS)},
+  pages     = {1--5},
+  year      = {2017},
+}
+
+@article{su2019secucode,
+  author    = {Su, Yang and others},
+  title     = {{SecuCode}: Intrinsic {PUF} Entangled Secure Wireless
+               Code Dissemination for Computational {RFID} Devices},
+  journal   = {IEEE Trans. Dependable Secure Comput.},
+  volume    = {18},
+  number    = {4},
+  pages     = {1699--1717},
+  year      = {2019},
+}
+
+@article{chen2023fsmfa,
+  author    = {Chen, Zigang and others},
+  title     = {{FSMFA}: Efficient Firmware-Secure Multi-Factor
+               Authentication Protocol for {IoT} Devices},
+  journal   = {Internet of Things},
+  volume    = {21},
+  pages     = {100685},
+  year      = {2023},
+}
+
+@article{schwinne2026secure,
+  author    = {Schwinne, Christian and Pelzl, Jan},
+  title     = {Secure Local Communication Between Browser Clients and
+               Resource-Constrained Embedded {IoT} Devices},
+  journal   = {J. Cybersecur. Priv.},
+  publisher = {MDPI},
+  volume    = {6},
+  number    = {1},
+  pages     = {9},
+  year      = {2026},
+}

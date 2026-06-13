@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "tracks": {
+    "puflib-like-rtc-slow": {
+      "source_region": "RTC_SLOW",
+      "native_puflib_compatible": false,
+      "helper_mechanism": "stable-mask+repetition8",
+      "helper_serialization": [
+        "json",
+        "RSPF"
+      ],
+      "helper_integrity": "hash preservation and gross-corruption rejection only; no cryptographic tamper-safety without an external expected hash, signature, or secret MAC",
+      "selection_policy": "distributed-window-v1",
+      "kdf": "HKDF-SHA256",
+      "paths": {
+        "arduino": "firmware/arduino_puf/rtc_slow_puf_reader/",
+        "micropython": "firmware/micropython_puf/device/rtc_slow_puf_native.py",
+        "shared_tools": "firmware/puf_shared/host_tools/"
+      }
+    },
+    "esp32-puflib-native": {
+      "reference_component": "firmware/components/esp32_puflib/",
+      "source_region": "RTC_FAST plus deep-sleep DATA SRAM capture path",
+      "native_puflib_compatible": true,
+      "helper_magic": null,
+      "helper_storage": "esp32_puflib NVS blobs",
+      "helper_bundle": "esp32-puflib-blob-bundle-v1",
+      "helper_bundle_policy": "lab-only raw NVS blob bundle; keep outside the repository",
+      "helper_blobs": [
+        "ECC_DATA",
+        "PUF_MASK",
+        "ECC_SLEEP_DATA",
+        "PUF_SLEEP_MASK"
+      ],
+            "runtime_status": {
+                "espidf": "executable native reference",
+                "arduino": "requires C or ESP-IDF integration before executable",
+                "micropython": "requires custom MicroPython C module or custom firmware before executable"
+            },
+            "paths": {
+                "espidf": "firmware/espidf_puf/",
+                "reference_component": "firmware/components/esp32_puflib/"
+            }
+        }
+    }
+}

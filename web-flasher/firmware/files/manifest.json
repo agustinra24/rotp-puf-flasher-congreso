@@ -1,0 +1,24 @@
+{
+  "version": "2.0",
+  "description": "IoT Device Firmware - MicroPython modules",
+  "files": [
+    "main.py",
+    "Device.py",
+    "device_constants.py",
+    "config_manager.py",
+    "config_crypto.py",
+    "rtc_fast_puf_probe.py",
+    "rtc_slow_puf_native.py",
+    "puzzle_auth.py",
+    "http_client.py",
+    "hmac_sha256.py",
+    "aes256.py",
+    "WifiControl.py",
+    "actuator_logic.py",
+    "temperature_sensor.py",
+    "microphone_sensor.py",
+    "led_semaphore.py",
+    "IR_send.py",
+    "button_toggle.py"
+  ]
+}

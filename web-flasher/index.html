@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROTP-PUF-FLASHER Web Flasher</title>
+<link rel="stylesheet" href="styles.css">
+<script src="vendor/qrcode-generator-1.4.4.min.js"></script>
+<script type="module">
+  import { ESPLoader, Transport } from "./vendor/esptool-js-0.5.7.bundle.js";
+  window.EspLoader = ESPLoader;
+  window.Transport = Transport;
+</script>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <svg class="header__icon-svg" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="10" y="10" width="20" height="20" rx="2"/>
+      <rect x="15" y="15" width="10" height="10" rx="1"/>
+      <line x1="16" y1="10" x2="16" y2="5"/><line x1="20" y1="10" x2="20" y2="5"/><line x1="24" y1="10" x2="24" y2="5"/>
+      <line x1="16" y1="30" x2="16" y2="35"/><line x1="20" y1="30" x2="20" y2="35"/><line x1="24" y1="30" x2="24" y2="35"/>
+      <line x1="10" y1="16" x2="5" y2="16"/><line x1="10" y1="20" x2="5" y2="20"/><line x1="10" y1="24" x2="5" y2="24"/>
+      <line x1="30" y1="16" x2="35" y2="16"/><line x1="30" y1="20" x2="35" y2="20"/><line x1="30" y1="24" x2="35" y2="24"/>
+    </svg>
+    <h1 class="header__title">ROTP-PUF-FLASHER Web Flasher</h1>
+    <p class="header__subtitle">Browser-based deployment tool for ESP32 IoT firmware</p>
+    <span class="header__chip">ESP32-WROOM-32D &middot; MicroPython v1.25.0</span>
+    <div class="mt-lg">
+      <button type="button" class="btn btn-secondary btn-sm" data-action="open-docs" aria-label="Open firmware documentation">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        Firmware documentation
+      </button>
+    </div>
+  </header>
+
+  <div class="prereq">
+    <span class="prereq__icon">
+      <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </span>
+    <div class="prereq__text">
+      <strong>Before you start</strong>: Use Google Chrome or Microsoft Edge and connect the ESP32 over USB.
+      Steps 1 and 2 use DTR/RTS auto-reset. If the connection fails, <strong>hold BOOT</strong> while selecting the port and release it when the process starts.
+      Steps 3 and later do not require BOOT.
+      <strong>Important</strong>: Steps 3 to 6 reboot the ESP32 when they finish. If the device was already authenticated and sending data to the server, the previous Redis session can block re-authentication with HTTP 409. In that case, flush Redis before or after the operation; the serial monitor detects the condition and shows the exact command.
+    </div>
+  </div>
+
+  <!-- CARD 1: DIAGNOSTICS -->
+  <div class="card card--mp" id="card1">
+    <div class="card__header">
+      <span class="card__step">1</span>
+      <h2 class="card__title">Chip Diagnostics</h2>
+    </div>
+    <p class="card__desc">Detect the connected ESP32 model, revision, MAC address, and flash capacity. If the connection fails, hold <code>BOOT</code> while selecting the port.</p>
+    <button type="button" class="btn btn--mp" id="btnDiag">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Connect and Diagnose
+    </button>
+    <div class="info-box hidden" id="diagResult"></div>
+    <div class="status-msg" id="diagStatus" role="alert"></div>
+  </div>
+
+  <!-- CARD 2: FLASH MICROPYTHON -->
+  <div class="card card--mp" id="card2">
+    <div class="card__header">
+      <span class="card__step">2</span>
+      <h2 class="card__title">Flash MicroPython</h2>
+    </div>
+    <p class="card__desc">Flash MicroPython v1.25.0 to the ESP32 with <code>esptool-js</code>. The flow erases the full flash, writes the base image, reboots the board, and verifies that MicroPython enters Raw REPL before continuing. If the connection fails, hold <code>BOOT</code> while selecting the port and release it when the process starts.</p>
+    <button type="button" class="btn btn--mp" id="btnFlash">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install MicroPython
+    </button>
+    <div class="progress-section hidden" id="flashProgressSection">
+      <div class="progress">
+        <div class="progress__fill" id="flashProgressFill" style="width:0%"></div>
+      </div>
+      <div class="progress__info">
+        <span class="progress__file" id="flashProgressFile">Preparing...</span>
+        <span class="progress__pct" id="flashProgressPct">0%</span>
+      </div>
+    </div>
+    <div class="status-msg" id="flashStatus" role="alert"></div>
+  </div>
+
+  <!-- CARD 3: UPLOAD FILES -->
+  <div class="card card--mp" id="card3">
+    <div class="card__header">
+      <span class="card__step">3</span>
+      <h2 class="card__title">Upload Files to the ESP32</h2>
+    </div>
+    <p class="card__desc">Transfer the 18 IoT firmware <code>.py</code> modules to the ESP32 filesystem through Raw REPL. If a <code>config.json</code> is loaded, the tool also encrypts it with the runtime PUF key and uploads it automatically. The process usually takes 30 to 60 seconds plus PUF enrollment when needed. After a fresh flash, the first Raw REPL connection can take another 30 to 60 seconds; the tool waits automatically.</p>
+    <button type="button" class="btn btn--mp" id="btnUpload" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Files
+    </button>
+    <div class="progress-section hidden" id="uploadProgressSection">
+      <div class="progress">
+        <div class="progress__fill" id="uploadProgressFill" style="width:0%"></div>
+      </div>
+      <div class="progress__info">
+        <span class="progress__file" id="uploadProgressFile">Preparing...</span>
+        <span class="progress__pct" id="uploadProgressPct">0%</span>
+      </div>
+    </div>
+    <div class="info-box hidden" id="uploadResult"></div>
+    <div class="status-msg" id="uploadStatus" role="alert"></div>
+  </div>
+
+  <!-- CARD 4: CONFIGURATION -->
+  <div class="card card--mp" id="card4">
+    <div class="card__header">
+      <span class="card__step">4</span>
+      <h2 class="card__title">Device Configuration</h2>
+    </div>
+    <p class="card__desc">Configure network, security, and server settings. Option A imports a <code>config.json</code> provided by the backend administrator. Option B generates the configuration from the form below. In both cases, the tool stores a PUF-bound encrypted envelope on the ESP32.</p>
+
+    <p class="form-section-label">
+      <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Option A: Import config.json
+    </p>
+    <div class="dropzone" id="configDropzone" role="button" tabindex="0" aria-label="Load config.json file">
+      <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/><polyline points="16 16 12 12 8 16"/></svg>
+      <p class="dropzone-label">Drop config.json here</p>
+      <p class="dropzone-hint">or click to select a file</p>
+      <input type="file" id="configFileInput" accept=".json,application/json" class="hidden">
+    </div>
+
+    <div id="configSummary" class="hidden">
+      <div class="config-summary" id="configPills"></div>
+      <div class="form-row form-row-spaced">
+        <div class="form-group">
+          <label for="cfgWifiSsid">WiFi SSID</label>
+          <div class="flex-row">
+            <input type="text" id="cfgWifiSsid" placeholder="WiFi network name" class="flex-1">
+            <button type="button" class="btn btn-secondary btn-sm nowrap" data-scan-target="cfgWifiSsid" title="Scan WiFi networks through the ESP32">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              Scan
+            </button>
+          </div>
+          <select id="cfgWifiSelect" aria-label="Available WiFi networks" class="hidden wifi-select" data-target-input="cfgWifiSsid"></select>
+        </div>
+        <div class="form-group">
+          <label for="cfgWifiPass">WiFi Password</label>
+          <input type="password" id="cfgWifiPass" placeholder="WiFi password">
+        </div>
+      </div>
+      <button type="button" class="btn btn--mp" id="btnUploadConfig" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+        <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Encrypt and Upload config.json
+      </button>
+      <div class="status-msg" id="configFileStatus" role="alert"></div>
+    </div>
+
+    <div class="separator"><span>or</span></div>
+
+    <button type="button" class="manual-toggle" id="manualToggle">Configure manually</button>
+
+    <div class="manual-form" id="manualForm">
+      <p class="form-section-label">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        WiFi Network
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mWifiSsid">WiFi SSID *</label>
+          <div class="flex-row">
+            <input type="text" id="mWifiSsid" placeholder="Network name" class="flex-1">
+            <button type="button" class="btn btn-secondary btn-sm nowrap" data-scan-target="mWifiSsid" title="Scan WiFi networks">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              Scan
+            </button>
+          </div>
+          <select id="mWifiSelect" aria-label="Available WiFi networks" class="hidden wifi-select" data-target-input="mWifiSsid"></select>
+        </div>
+        <div class="form-group">
+          <label for="mWifiPass">WiFi Password</label>
+          <input type="password" id="mWifiPass" placeholder="Password">
+        </div>
+      </div>
+      <hr class="form-divider">
+      <p class="form-section-label">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        Server
+      </p>
+      <div class="form-group">
+        <label for="mServerUrl">Server URL *</label>
+        <input type="url" id="mServerUrl" value="http://" placeholder="http://192.168.1.100">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mServerPort">Server Port</label>
+          <input type="number" id="mServerPort" value="5000" placeholder="5000">
+        </div>
+        <div class="form-group">
+          <label for="mDeviceId">Device ID</label>
+          <input type="text" id="mDeviceId" placeholder="esp32-001">
+        </div>
+      </div>
+      <hr class="form-divider">
+      <p class="form-section-label">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Security
+      </p>
+      <div class="form-group">
+        <label for="mApiKey">API Key *</label>
+        <input type="text" id="mApiKey" placeholder="Server API key">
+      </div>
+      <div class="form-group">
+        <label for="mDeviceKey">Device Key (hex, 64 chars) *</label>
+        <input type="text" id="mDeviceKey" placeholder="64 hexadecimal characters" maxlength="64">
+      </div>
+      <div class="form-group">
+        <label for="mServerKey">Server Key (hex, 64 chars) *</label>
+        <input type="text" id="mServerKey" placeholder="64 hexadecimal characters" maxlength="64">
+      </div>
+      <hr class="form-divider">
+      <p class="form-section-label">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Parameters
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mInterval">Reading interval (s)</label>
+          <input type="number" id="mInterval" value="30" placeholder="30">
+        </div>
+        <div class="form-group">
+          <label for="mLocation">Location</label>
+          <input type="text" id="mLocation" placeholder="Main lab">
+        </div>
+      </div>
+      <button type="button" class="btn btn--mp btn-mt" id="btnManualUpload" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        Generate, Encrypt, and Upload config.json
+      </button>
+      <div class="status-msg" id="manualConfigStatus" role="alert"></div>
+    </div>
+  </div>
+
+  <!-- PROVISIONING REPORT (appears after Card 4 config upload) -->
+  <div class="card card--mp hidden" id="cardReport">
+    <div class="card__header">
+      <span class="card__step step-badge--success">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <h2 class="card__title">Provisioning Complete</h2>
+    </div>
+    <p class="card__desc">Deployment summary. Download the report for lab documentation or audits.</p>
+    <div class="info-box report-content" id="reportContent"></div>
+    <div class="flex-row-wrap mt-md">
+      <button type="button" class="btn btn--mp btn-sm" id="btnDownloadReport">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Report
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnQR">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
+        Generate QR
+      </button>
+    </div>
+    <canvas id="qrCanvas" class="hidden mt-md" style="border-radius:8px"></canvas>
+  </div>
+
+  <!-- CARD 5: MONITOR SERIAL -->
+  <div class="card card--mp" id="card5">
+    <div class="card__header">
+      <span class="card__step">5</span>
+      <h2 class="card__title">Serial Monitor</h2>
+    </div>
+    <p class="card__desc">Monitor ESP32 serial output in real time at 115200 baud. The monitor reconnects automatically after disconnects.</p>
+    <div class="console-toolbar">
+      <button type="button" class="btn btn--mp btn-sm" id="btnMonStart" aria-label="Start serial monitor">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        Start
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnMonStop" disabled aria-label="Stop serial monitor">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        Stop
+      </button>
+      <button type="button" class="btn btn--danger btn-sm" id="btnClearMon" aria-label="Clear serial console">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        Clear
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnReboot" title="Soft reboot the ESP32 through serial" aria-label="Reboot ESP32">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Reboot ESP32
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnExportLog" aria-label="Save serial log">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Save
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" id="btnCopyLog" aria-label="Copy log to clipboard">
+        <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+      <label class="mon-toggle" title="Add timestamps to each line">
+        <input type="checkbox" id="monTimestamps">
+        <span class="mon-toggle__label">T</span>
+      </label>
+    </div>
+    <div class="mon-filter">
+      <svg class="icon icon-sm mon-filter-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="monFilterInput" placeholder="Filter lines (plain text or /regex/)">
+    </div>
+    <div class="terminal-wrap">
+      <div class="terminal-titlebar"><span class="terminal-dots"></span></div>
+      <div class="terminal" id="serialConsole" role="log" aria-live="polite"></div>
+    </div>
+
+    <div class="redis-alert" id="redisAlert" role="alert">
+      <div class="redis-alert__title">
+        <svg class="icon icon-md" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Active Redis Session Detected (HTTP 409)
+      </div>
+      <p class="redis-alert__text">The server has a previous session that prevents re-authentication. Run this command in the server terminal to clear Redis:</p>
+      <div class="redis-alert__cmd">
+        <code id="redisCmd">docker compose exec redis redis-cli -a REDIS_PASSWORD FLUSHDB</code>
+        <button type="button" class="redis-alert__copy" id="btnRedisCmd">Copy</button>
+      </div>
+      <p class="redis-alert__hint">Then reboot the ESP32 with the EN button or by disconnecting and reconnecting USB.</p>
+    </div>
+  </div>
+
+  <!-- CARD 6: DEVICE MANAGEMENT -->
+  <div class="card card--mp" id="card6">
+    <div class="card__header">
+      <span class="card__step">6</span>
+      <h2 class="card__title">Device Management</h2>
+    </div>
+    <p class="card__desc">Read and modify configuration or files on an already provisioned ESP32. Use this to change WiFi settings, update the server, or replace individual modules without repeating the full flow. These operations reboot the firmware. If the device was authenticated, Redis may need to be flushed afterward.</p>
+
+    <div class="mgmt-tabs">
+      <button type="button" class="mgmt-tab active" data-tab="mgmt-config">Configuration</button>
+      <button type="button" class="mgmt-tab" data-tab="mgmt-files">Files</button>
+    </div>
+
+    <!-- Tab A: Config -->
+    <div class="mgmt-panel" id="mgmt-config">
+      <button type="button" class="btn btn--mp" id="btnReadConfig" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Read Current ESP32 Configuration
+      </button>
+      <div id="mgmtConfigForm" class="hidden"></div>
+      <div class="flex-row-wrap mt-md">
+        <button type="button" id="btnSaveConfig" class="btn btn--mp hidden" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Changes to ESP32
+        </button>
+      </div>
+      <div class="status-msg" id="mgmtConfigStatus" role="alert"></div>
+    </div>
+
+    <!-- Tab B: Files -->
+    <div class="mgmt-panel hidden" id="mgmt-files">
+      <button type="button" class="btn btn--mp" id="btnReadFiles" title="Reboots the ESP32. If it was authenticated, Redis may need to be flushed.">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Read ESP32 Files
+      </button>
+      <div id="mgmtFileList" class="hidden"></div>
+      <div class="dropzone hidden" id="mgmtDropzone" role="button" tabindex="0" aria-label="Upload files to the ESP32">
+        <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        <p class="dropzone-label">Drop .py files here to upload them</p>
+        <p class="dropzone-hint">or click to select. Existing files are replaced when the names match.</p>
+        <input type="file" id="mgmtFileInput" accept=".py" multiple class="hidden">
+      </div>
+      <div class="status-msg" id="mgmtFileStatus" role="alert"></div>
+    </div>
+  </div>
+
+  <!-- DOCS MODAL -->
+  <div class="docs-overlay" id="docsOverlay" role="dialog" aria-modal="true" aria-labelledby="docsModalTitle">
+    <div class="docs-modal">
+      <button class="docs-close" id="docsCloseBtn" type="button" aria-label="Close documentation">&times;</button>
+      <h2 class="docs-title" id="docsModalTitle">ROTP-PUF-FLASHER Firmware</h2>
+      <p class="docs-subtitle">Modular ESP32 firmware that reads temperature, humidity, and noise sensors; controls local actuators; and sends telemetry through puzzle-based authentication using HMAC-SHA256, AES-256-CBC, and JWT tokens.</p>
+
+      <div class="docs-section">
+        <div class="docs-section-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Modules (18 files)
+        </div>
+        <div class="docs-file-grid">
+          <span class="docs-file-name">main.py</span><span class="docs-file-desc">Entry point and boot sequence</span>
+          <span class="docs-file-name">Device.py</span><span class="docs-file-desc">Sensors, actuators, authentication, and telemetry orchestration</span>
+          <span class="docs-file-name">device_constants.py</span><span class="docs-file-desc">Hardware pin map and device constants</span>
+          <span class="docs-file-name">config_manager.py</span><span class="docs-file-desc">Encrypted config loading, validation, and UART provisioning</span>
+          <span class="docs-file-name">config_crypto.py</span><span class="docs-file-desc">PUF-bound envelope for at-rest configuration protection</span>
+          <span class="docs-file-name">rtc_slow_puf_native.py</span><span class="docs-file-desc">RTC SLOW SRAM-PUF enrollment, helper data, and key derivation</span>
+          <span class="docs-file-name">rtc_fast_puf_probe.py</span><span class="docs-file-desc">RTC FAST/SLOW sampling used by the PUF module</span>
+          <span class="docs-file-name">puzzle_auth.py</span><span class="docs-file-desc">Puzzle authentication with HMAC-SHA256 and AES-256 to obtain JWTs</span>
+          <span class="docs-file-name">http_client.py</span><span class="docs-file-desc">HTTP client with Bearer JWT, retry, and backoff</span>
+          <span class="docs-file-name">hmac_sha256.py</span><span class="docs-file-desc">Small HMAC-SHA256 implementation for MicroPython</span>
+          <span class="docs-file-name">aes256.py</span><span class="docs-file-desc">AES-256-CBC support for the backend-compatible puzzle flow</span>
+          <span class="docs-file-name">WifiControl.py</span><span class="docs-file-desc">WiFi station mode with reconnection and backoff</span>
+          <span class="docs-file-name">actuator_logic.py</span><span class="docs-file-desc">Local actuator decisions from config thresholds</span>
+          <span class="docs-file-name">temperature_sensor.py</span><span class="docs-file-desc">DHT11 temperature and humidity readings</span>
+          <span class="docs-file-name">microphone_sensor.py</span><span class="docs-file-desc">MAX4466 noise-level sampling through ADC</span>
+          <span class="docs-file-name">led_semaphore.py</span><span class="docs-file-desc">RGB traffic-light LED control</span>
+          <span class="docs-file-name">IR_send.py</span><span class="docs-file-desc">38 kHz infrared PWM transmitter</span>
+          <span class="docs-file-name">button_toggle.py</span><span class="docs-file-desc">GPIO 0 toggle to pause or resume telemetry transmission</span>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Authentication Protocol
+        </div>
+        <ol class="docs-proto-list">
+          <li>Generate <code>R2</code>, 32 random bytes.</li>
+          <li>Compute <code>P2 = HMAC-SHA256(device_key || server_key, R2)</code>.</li>
+          <li>Encrypt <code>P2c = AES-256-CBC(P2, device_key, IV_random)</code>.</li>
+          <li>Send <code>puzzle_response</code> to <code>POST /api/v1/auth/device/login</code>.</li>
+          <li>Receive a JWT with 24-hour expiration and a single Redis session.</li>
+          <li>Use the JWT as a Bearer token for <code>POST /api/v1/device/reading</code>.</li>
+        </ol>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Execution Flow
+        </div>
+        <div class="docs-diagram-container">
+          <div class="docs-flow" aria-label="Firmware execution flow">
+            <div class="docs-flow__stage">
+              <span class="docs-flow__label">Boot</span>
+              <strong>main.py</strong>
+              <span>loads the encrypted configuration and validates required keys.</span>
+            </div>
+            <div class="docs-flow__arrow">→</div>
+            <div class="docs-flow__stage">
+              <span class="docs-flow__label">Initialize</span>
+              <strong>Device.py</strong>
+              <span>starts WiFi, NTP, sensors, actuators, and the local control loop.</span>
+            </div>
+            <div class="docs-flow__arrow">→</div>
+            <div class="docs-flow__stage">
+              <span class="docs-flow__label">Authenticate</span>
+              <strong>puzzle_auth.py</strong>
+              <span>builds the HMAC/AES puzzle response and obtains a JWT.</span>
+            </div>
+            <div class="docs-flow__arrow">→</div>
+            <div class="docs-flow__stage">
+              <span class="docs-flow__label">Telemetry</span>
+              <strong>http_client.py</strong>
+              <span>sends readings with a Bearer token while local actuator logic keeps running.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <div class="docs-section-title">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Known Limits
+        </div>
+        <ul class="docs-limit-list">
+          <li>The noise sensor is used locally for LED control but is not sent to the API because the backend schema has no compatible field.</li>
+          <li>If the ESP32 reboots while the Redis session is still active, the device can be rejected with HTTP 409 until the session expires or is cleared.</li>
+          <li><code>config.json</code> is encrypted at rest with a PUF-derived key, but without Secure Boot a physical attacker can replace the loader and extract runtime material.</li>
+          <li>Device-to-server communication uses HTTP in the lab path. The server can be placed behind TLS, but MicroPython <code>urequests</code> support is limited.</li>
+          <li>Authenticated OTA updates, hardware watchdog integration, and offline telemetry buffering are outside this release.</li>
+        </ul>
+      </div>
+
+      <div class="docs-section">
+        <p class="docs-authors">Credits: ROTP-PUF-FLASHER is authored by Agustin Ahumada Ramirez and Raziel Cesar Campos Sanchez. The included IoT firmware modules build on earlier INAOE platform work by Raziel Campos, Jose Zapata, Alejandro Salinas, and Agustin Ahumada.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>ROTP-PUF-FLASHER &middot; MicroPython Web Flasher for ESP32-WROOM-32D</p>
+    <p>IoT Security Platform &middot; INAOE 2026</p>
+    <p class="mt-sm text-xs">Requires Chrome or Edge &middot; Web Serial API &middot; USB cable</p>
+  </footer>
+</div>
+
+<script src="app.js?v=1.0.0"></script>
+</body>
+</html>

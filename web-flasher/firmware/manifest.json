@@ -1,0 +1,16 @@
+{
+  "name": "ROTP-PUF-FLASHER MicroPython Firmware",
+  "version": "1.25.0",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "ESP32_GENERIC-20250415-v1.25.0.bin",
+          "offset": 4096
+        }
+      ]
+    }
+  ]
+}

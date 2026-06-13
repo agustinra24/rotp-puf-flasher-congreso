@@ -1,0 +1,55 @@
+{
+  "port": "/dev/cu.usbserial-0001",
+  "source": "firmware/micropython_puf/device/protected_app.py",
+  "config": "complete (1000 samples, 256 selected bits, 64x128 windows, off 50 ms)",
+  "enrollment_s_note": "445.9 device / 463.8 host (from boardA-c2-sleep50/enroll.log; not re-measured here)",
+  "plaintext_bytes": 587,
+  "envelope_bytes": 656,
+  "overhead_bytes": 69,
+  "overhead_pct": 11.75,
+  "envelope_build_pure_s": 0.0146,
+  "envelope_build_total_s": 7.5329,
+  "key_fetch_roundtrip_s": 7.5183,
+  "puf_identity_reconstruction_s": {
+    "n": 5,
+    "min": 2.227,
+    "median": 2.2316,
+    "mean": 2.4139,
+    "max": 3.144,
+    "raw": [
+      3.144,
+      2.227,
+      2.2287,
+      2.2383,
+      2.2316
+    ]
+  },
+  "secure_execution_s": {
+    "n": 5,
+    "min": 2.4545,
+    "median": 2.4668,
+    "mean": 2.4633,
+    "max": 2.469,
+    "raw": [
+      2.4668,
+      2.4545,
+      2.467,
+      2.4594,
+      2.469
+    ]
+  },
+  "tamper_rejection_s": {
+    "n": 5,
+    "min": 2.4523,
+    "median": 2.4608,
+    "mean": 2.4609,
+    "max": 2.4699,
+    "raw": [
+      2.455,
+      2.4699,
+      2.4666,
+      2.4523,
+      2.4608
+    ]
+  }
+}
